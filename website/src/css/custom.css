@@ -142,6 +142,7 @@ li.footer__item a svg {
 
 .navbar__item {
   font-size: 1em;
+  min-height: 50px;
 }
 
 @media (min-width: 1200px) {
