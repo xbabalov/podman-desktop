@@ -19,17 +19,19 @@
 import type { Locator, Page } from 'playwright';
 import { SettingsPage } from './settings-page';
 
-export class SettingsExtensionsPage extends SettingsPage {
+export class OpenshiftLocalExtensionPage extends SettingsPage {
   readonly heading: Locator;
-  readonly featuredExtensions: Locator;
-  readonly devSandboxBox: Locator;
-  readonly openshiftLocalBox: Locator;
+  readonly enableButton: Locator;
+  readonly disableButton: Locator;
+  readonly removeExtensionButton: Locator;
+  readonly status: Locator;
 
   constructor(page: Page) {
-    super(page, 'Extensions');
-    this.heading = page.getByRole('heading', { name: 'Extensions' });
-    this.featuredExtensions = page.getByLabel('FeaturedExtensions');
-    this.devSandboxBox = this.featuredExtensions.getByLabel('Developer Sandbox');
-    this.openshiftLocalBox = this.featuredExtensions.getByLabel('OpenShift Local');
+    super(page, 'Red Hat OpenShift Local');
+    this.heading = page.getByText('Red Hat OpenShift Local Extension');
+    this.enableButton = page.getByRole('button', { name: ' Enable' });
+    this.disableButton = page.getByRole('button', { name: ' Disable' });
+    this.removeExtensionButton = page.getByRole('button', { name: ' Remove' });
+    this.status = page.getByLabel('connection-status-label');
   }
 }
