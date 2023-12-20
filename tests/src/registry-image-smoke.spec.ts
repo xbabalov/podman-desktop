@@ -25,6 +25,7 @@ import { WelcomePage } from './model/pages/welcome-page';
 import { SettingsBar } from './model/pages/settings-bar';
 import { RegistriesPage } from './model/pages/registries-page';
 import { NavigationBar } from './model/workbench/navigation';
+import { ImagesPage } from './model/pages/images-page';
 
 let pdRunner: PodmanDesktopRunner;
 let page: Page;
@@ -34,17 +35,29 @@ let registryUsername: string;
 let registryPswdSecret: string;
 let imageName: string;
 let imageTag: string;
+let imageUrl: string;
 
 beforeAll(async () => {
   pdRunner = new PodmanDesktopRunner();
   page = await pdRunner.start();
-  pdRunner.setVideoName('registry-image-e2e');
+  pdRunner.setVideoAndTraceName('registry-image-e2e');
 
-  registryUrl = 'ghcr.io';
-  registryUsername = 'podmandesktop-ci';
-  registryPswdSecret = process.env.REGISTRY_PSWD_SECRET ? process.env.REGISTRY_PSWD_SECRET : 'invalidPswd';
-  imageName = 'ghcr.io/' + registryUsername + '/alpine-hello';
-  imageTag = ':latest';
+  registryUrl = process.env.REGISTRY_URL ? process.env.REGISTRY_URL : process.env.CI ? 'ghcr.io' : '';
+  registryUsername = process.env.REGISTRY_USERNAME
+    ? process.env.REGISTRY_USERNAME
+    : process.env.CI
+      ? 'podmandesktop-ci'
+      : '';
+  registryPswdSecret = process.env.REGISTRY_PASSWD
+    ? process.env.REGISTRY_PASSWD
+    : process.env.CI
+      ? process.env.PODMANDESKTOP_CI_BOT_TOKEN
+        ? process.env.PODMANDESKTOP_CI_BOT_TOKEN
+        : ''
+      : '';
+  imageName = process.env.REGISTRY_IMAGE_NAME ? process.env.REGISTRY_IMAGE_NAME : 'alpine-hello';
+  imageTag = process.env.REGISTRY_IMAGE_TAG ? process.env.REGISTRY_IMAGE_TAG : 'latest';
+  imageUrl = registryUrl + '/' + registryUsername + '/' + imageName;
 
   const welcomePage = new WelcomePage(page);
   await welcomePage.handleWelcomePage(true);
@@ -52,6 +65,15 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  const imagesPage = new ImagesPage(page);
+  const imageDetailPage = await imagesPage.openImageDetails(imageUrl);
+  await imageDetailPage.deleteButton.click();
+
+  await navBar.openSettings();
+  const settingsBar = new SettingsBar(page);
+  const registryPage = await settingsBar.openTabPage(RegistriesPage);
+  await registryPage.removeRegistry('GitHub');
+
   await pdRunner.close();
 });
 
@@ -59,39 +81,48 @@ beforeEach<RunnerTestContext>(async ctx => {
   ctx.pdRunner = pdRunner;
 });
 
-describe('Registry image workflow verification', async () => {
-  test('Try pulling unauthentified image', async () => {
+describe('Pulling image from authenticated registry workflow verification', async () => {
+  test('Cannot pull image from unauthenticated registry', async () => {
     const imagesPage = await navBar.openImages();
 
-    const fullImageTitle = imageName.concat(imageTag);
+    const fullImageTitle = imageUrl.concat(':' + imageTag);
     const errorMessage = page.getByText(
-      'initializing source docker://' +
+      'Error while pulling image from Podman: access to image "' +
         fullImageTitle +
-        ': unable to retrieve auth token: invalid username/password: unauthorized',
+        '" is denied (500 error). Can also be that the registry requires authentication.',
     );
-    const pullImagePage = await imagesPage.openPullImage();
-    await pullImagePage.pullImage(fullImageTitle);
 
-    await playExpect(errorMessage).isVisible();
+    const pullImagePage = await imagesPage.openPullImage();
+    const imageNameInput = pullImagePage.page.getByLabel('imageName');
+    const pullImageButton = pullImagePage.page.getByRole('button', { name: 'Pull' });
+
+    await imageNameInput.fill(fullImageTitle);
+    await pullImageButton.click();
+
+    await playExpect(errorMessage).toBeVisible();
   });
-  test('Create and authenticate registry', async () => {
+  test.runIf(registryUrl !== '' && registryUsername !== '' && registryPswdSecret !== '')('Add registry', async () => {
     await navBar.openSettings();
     const settingsBar = new SettingsBar(page);
     const registryPage = await settingsBar.openTabPage(RegistriesPage);
 
     await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
 
-    const registryBox = registryPage.registriesTable.getByLabel(registryUrl);
-    await playExpect(registryBox).isVisible();
+    const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+    const username = registryBox.getByText(registryUsername);
+    await playExpect(username).toBeVisible();
   });
-  test('Pull image from registry', async () => {
-    const imagesPage = await navBar.openImages();
+  test.runIf(registryUrl !== '' && registryUsername !== '' && registryPswdSecret !== '')(
+    'Image pulling from authenticated registry verification',
+    async () => {
+      const imagesPage = await navBar.openImages();
 
-    const fullImageTitle = imageName.concat(imageTag);
-    const pullImagePage = await imagesPage.openPullImage();
-    const updatedImages = await pullImagePage.pullImage(fullImageTitle);
+      const fullImageTitle = imageUrl.concat(':' + imageTag);
+      const pullImagePage = await imagesPage.openPullImage();
+      const updatedImages = await pullImagePage.pullImage(fullImageTitle);
 
-    const exists = await updatedImages.waitForImageExists(fullImageTitle);
-    playExpect(exists, fullImageTitle + ' image not present in the list of images').toBeTruthy();
-  });
+      const exists = await updatedImages.waitForImageExists(imageUrl);
+      playExpect(exists, fullImageTitle + ' image not present in the list of images').toBeTruthy();
+    },
+  );
 });
