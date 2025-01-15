@@ -51,4 +51,5 @@ export enum KubernetesResources {
   IngeressesRoutes = 'Ingresses & Routes',
   PVCs = 'Persistent Volume Claims',
   ConfigMapsSecrets = 'ConfigMaps & Secrets',
+  PortForwarding = 'Port Forwarding',
 }
