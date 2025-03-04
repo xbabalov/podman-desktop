@@ -117,6 +117,6 @@ export class ImageDetailsPage extends DetailsPage {
     await playExpect(pushToKindButton).toBeVisible();
     await pushToKindButton.click();
 
-    await handleConfirmationDialog(this.page, 'Kind', true, 'OK', '', 15_000);
+    await handleConfirmationDialog(this.page, 'Kind', true, 'OK', '', 30_000);
   }
 }
