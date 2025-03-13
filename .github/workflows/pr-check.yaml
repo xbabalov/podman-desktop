@@ -401,8 +401,10 @@ jobs:
       - name: Evaluate changes in files
         id: pnpm_changed
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD > changes.txt
+          BASE_REF="${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || 'main' }}"
+          BASE_REF="${BASE_REF#refs/heads/}"  # Strip 'refs/heads/' if present
+          git fetch origin ${BASE_REF}
+          git diff --name-only origin/${BASE_REF} HEAD > changes.txt
           if grep -q  -e 'pnpm-lock.yaml' -e 'pr-check.yaml' changes.txt; then
             echo "PNPM_LOCK_CHANGED=true" >> $GITHUB_OUTPUT
           else
