@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { execSync } from 'node:child_process';
+
 import { DockerCompatibilityPage } from '../model/pages/docker-compatibility-page';
 import { ExperimentalPage } from '../model/pages/experimental-page';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
@@ -37,7 +39,24 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   await waitForPodmanMachineStartup(page);
 });
 
-test.afterAll(async ({ runner }) => {
+test.afterAll(async ({ runner, page }) => {
+  if (test.info().status === 'failed') {
+    const settingsBar = new SettingsBar(page);
+    const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
+    if (!(await experimentalPage.dockerCompatibilityCheckbox.isChecked())) {
+      await experimentalPage.dockerCompatibilityCheckbox.locator('..').uncheck();
+    }
+
+    try {
+      // eslint-disable-next-line sonarjs/no-os-command-from-path
+      execSync('podman machine start');
+      console.log('Default podman machine started');
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('VM already running')) {
+        console.log('Default podman machine already started, skipping start.');
+      }
+    }
+  }
   await runner.close();
 });
 
@@ -106,7 +125,7 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     await playExpect(experimentalPage.dockerCompatibilityCheckbox).toBeVisible();
     await playExpect(experimentalPage.dockerCompatibilityCheckbox).toBeChecked();
 
-    await experimentalPage.dockerCompatibilityCheckbox.locator('..').check();
+    await experimentalPage.dockerCompatibilityCheckbox.locator('..').uncheck();
     await playExpect(experimentalPage.dockerCompatibilityCheckbox).not.toBeChecked();
 
     const DCLink = settingsBar.getPreferencesLinkLocator(settingsDCLabel);
