@@ -42,7 +42,11 @@ export class DockerCompatibilityPage extends SettingsPage {
 
   public async socketIsReachable(): Promise<boolean> {
     const podmanListeningLabel = this.content.getByText('podman is listening');
-    await podmanListeningLabel.waitFor({ state: 'visible' });
-    return await podmanListeningLabel.isVisible();
+    try {
+      await podmanListeningLabel.waitFor({ state: 'visible' });
+      return await podmanListeningLabel.isVisible();
+    } catch (error) {
+      return false;
+    }
   }
 }
