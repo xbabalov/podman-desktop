@@ -46,17 +46,14 @@ export class DockerCompatibility {
 
   init(): void {
     const dockerCompatibilityConfiguration: IConfigurationNode = {
-      id: 'preferences.experimental.dockerCompatibility',
-      title: 'Experimental (Docker Compatibility)',
+      id: 'preferences.dockerCompatibility',
+      title: 'Docker Compatibility',
       type: 'object',
       properties: {
         [DockerCompatibility.ENABLED_FULL_KEY]: {
           description: 'Enable the section for Docker compatibility.',
           type: 'boolean',
           default: false,
-          experimental: {
-            githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10769',
-          },
         },
       },
     };
