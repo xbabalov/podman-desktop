@@ -54,4 +54,14 @@ export class ExperimentalPage extends SettingsPage {
     await this.enableAllExperimentalFeaturesButton.uncheck();
     await playExpect(this.enableAllExperimentalFeaturesCheckbox).not.toBeChecked();
   }
+
+  public async setDockerCompatibilityFeature(enable: boolean): Promise<void> {
+    await playExpect(this.dockerCompatibilityCheckbox).toBeVisible();
+    let isEnabled = await this.dockerCompatibilityCheckbox.isChecked();
+    if (isEnabled !== enable) {
+      await this.dockerCompatibilityCheckbox.locator('..').setChecked(enable);
+      isEnabled = await this.dockerCompatibilityCheckbox.isChecked();
+      playExpect(isEnabled).toEqual(enable);
+    }
+  }
 }
