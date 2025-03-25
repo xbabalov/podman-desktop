@@ -75,7 +75,7 @@ onMount(() => {
     {#snippet subtitleSnippet()}
       <Link
         aria-label="Image Details"
-        on:click={(): void => {
+        onclick={(): void => {
           if (container.imageHref) {
             router.goto(container.imageHref);
           }
