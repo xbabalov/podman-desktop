@@ -43,9 +43,7 @@ test.afterAll(async ({ runner, page }) => {
   if (test.info().status === 'failed') {
     const settingsBar = new SettingsBar(page);
     const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
-    if (!(await experimentalPage.dockerCompatibilityCheckbox.isChecked())) {
-      await experimentalPage.dockerCompatibilityCheckbox.locator('..').uncheck();
-    }
+    await experimentalPage.setDockerCompatibilityFeature(false);
 
     try {
       // eslint-disable-next-line sonarjs/no-os-command-from-path
@@ -60,6 +58,7 @@ test.afterAll(async ({ runner, page }) => {
   await runner.close();
 });
 
+//Feature unstable on mac and linux atm
 test.skip(!isWindows, 'Testing only on Windows');
 
 test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, () => {
@@ -83,11 +82,7 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     //Verify Experimental page and enable the feature
     const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
     await playExpect(experimentalPage.heading).toBeVisible();
-    await playExpect(experimentalPage.dockerCompatibilityCheckbox).toBeVisible();
-    await playExpect(experimentalPage.dockerCompatibilityCheckbox).not.toBeChecked();
-
-    await experimentalPage.dockerCompatibilityCheckbox.locator('..').check();
-    await playExpect(experimentalPage.dockerCompatibilityCheckbox).toBeChecked();
+    await experimentalPage.setDockerCompatibilityFeature(true);
 
     await playExpect(DCLink).toBeVisible();
   });
@@ -122,11 +117,7 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
   test('Disable docker compatibility', async ({ page }) => {
     const settingsBar = new SettingsBar(page);
     const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
-    await playExpect(experimentalPage.dockerCompatibilityCheckbox).toBeVisible();
-    await playExpect(experimentalPage.dockerCompatibilityCheckbox).toBeChecked();
-
-    await experimentalPage.dockerCompatibilityCheckbox.locator('..').uncheck();
-    await playExpect(experimentalPage.dockerCompatibilityCheckbox).not.toBeChecked();
+    await experimentalPage.setDockerCompatibilityFeature(false);
 
     const DCLink = settingsBar.getPreferencesLinkLocator(settingsDCLabel);
     await playExpect(DCLink).not.toBeVisible();
