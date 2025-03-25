@@ -25,7 +25,6 @@ export class ExperimentalPage extends SettingsPage {
   readonly heading: Locator;
   readonly enableAllExperimentalFeaturesCheckbox: Locator;
   readonly enableAllExperimentalFeaturesButton: Locator;
-  readonly dockerCompatibilityCheckbox: Locator;
 
   constructor(page: Page) {
     super(page, 'Experimental');
@@ -34,9 +33,6 @@ export class ExperimentalPage extends SettingsPage {
       .getByRole('checkbox')
       .and(this.content.locator('#input-experimental-enable-all'));
     this.enableAllExperimentalFeaturesButton = this.enableAllExperimentalFeaturesCheckbox.locator('..');
-    this.dockerCompatibilityCheckbox = this.content.getByRole('checkbox', {
-      name: 'Enable the section for Docker compatibility.',
-    });
   }
 
   public async enableAllExperimentalFeatures(): Promise<void> {
@@ -53,15 +49,5 @@ export class ExperimentalPage extends SettingsPage {
 
     await this.enableAllExperimentalFeaturesButton.uncheck();
     await playExpect(this.enableAllExperimentalFeaturesCheckbox).not.toBeChecked();
-  }
-
-  public async setDockerCompatibilityFeature(enable: boolean): Promise<void> {
-    await playExpect(this.dockerCompatibilityCheckbox).toBeVisible();
-    let isEnabled = await this.dockerCompatibilityCheckbox.isChecked();
-    if (isEnabled !== enable) {
-      await this.dockerCompatibilityCheckbox.locator('..').setChecked(enable);
-      isEnabled = await this.dockerCompatibilityCheckbox.isChecked();
-      playExpect(isEnabled).toEqual(enable);
-    }
   }
 }
