@@ -29,8 +29,9 @@ import { expect as playExpect, test } from '../utility/fixtures';
 import { isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
-const settingsDCLabel = 'Docker Compatibility';
-const defaultMachine = 'Podman Machine peepo';
+const defaultMachine = 'Podman Machine';
+const DCPreferencesHref = '/preferences/default/preferences.dockerCompatibility';
+const DCSettingsHref = '/preferences/docker-compatibility';
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('docker-compatibility-e2e');
@@ -65,13 +66,11 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     await navigationBar.openSettings();
     const settingsBar = new SettingsBar(page);
 
-    const DCLink = settingsBar.getPreferencesLinkLocator(settingsDCLabel);
+    const DCLink = settingsBar.getLinkLocatorByHref(DCSettingsHref);
     await playExpect(DCLink).not.toBeVisible();
 
     //Enable the feature
     await setDockerCompatibilityFeature(true, page);
-
-    await playExpect(DCLink).toBeVisible();
   });
   test('Verify Docker Compatibility page', async ({ page }) => {
     const settingsBar = new SettingsBar(page);
@@ -103,10 +102,6 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
   });
   test('Disable docker compatibility', async ({ page }) => {
     await setDockerCompatibilityFeature(false, page);
-
-    const settingsBar = new SettingsBar(page);
-    const DCLink = settingsBar.getPreferencesLinkLocator(settingsDCLabel);
-    await playExpect(DCLink).not.toBeVisible();
   });
 });
 
@@ -115,13 +110,13 @@ async function setDockerCompatibilityFeature(enable: boolean, page: Page): Promi
   const settingsBar = new SettingsBar(page);
   await settingsBar.expandPreferencesTab();
 
-  const DCPreferencesLink = settingsBar.getPreferencesLinkLocator(settingsDCLabel);
+  const DCPreferencesLink = settingsBar.getLinkLocatorByHref(DCPreferencesHref);
   await playExpect(DCPreferencesLink).toBeVisible();
   await DCPreferencesLink.click();
   const DCPreferencesPage = new PreferencesPage(page);
 
   await playExpect(DCPreferencesPage.heading).toBeVisible();
-  const experimentalTitle = DCPreferencesPage.content.getByText(settingsDCLabel, { exact: true });
+  const experimentalTitle = DCPreferencesPage.content.getByText('Docker Compatibility', { exact: true });
   await playExpect(experimentalTitle).toBeVisible();
 
   //Set the feature
@@ -129,11 +124,19 @@ async function setDockerCompatibilityFeature(enable: boolean, page: Page): Promi
     name: 'Enable the section for Docker compatibility.',
   });
   await playExpect(dockerCompatibilityCheckbox).toBeVisible();
-  let isEnabled = await dockerCompatibilityCheckbox.isChecked();
+  const isEnabled = await dockerCompatibilityCheckbox.isChecked();
   if (isEnabled !== enable) {
     await dockerCompatibilityCheckbox.locator('..').setChecked(enable);
-    isEnabled = await dockerCompatibilityCheckbox.isChecked();
+    const isEnabled = await dockerCompatibilityCheckbox.isChecked();
     playExpect(isEnabled).toEqual(enable);
+  }
+
+  //Verify the main docker compatibility page (dis)appeared
+  const DCSettingsLink = settingsBar.getLinkLocatorByHref(DCSettingsHref);
+  if (enable) {
+    await playExpect(DCSettingsLink).toBeVisible();
+  } else {
+    await playExpect(DCSettingsLink).not.toBeVisible();
   }
 
   //Close the preferences bar
