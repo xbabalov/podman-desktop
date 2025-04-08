@@ -27,6 +27,7 @@ export class DockerCompatibilityPage extends SettingsPage {
   readonly podmanComposeCLICard: Locator;
   readonly dockerCLICard: Locator;
   readonly dockerContextDropdownMenu: Locator;
+  readonly podmanListeningLabel: Locator;
 
   constructor(page: Page) {
     super(page, 'Docker Compatibility');
@@ -39,13 +40,13 @@ export class DockerCompatibilityPage extends SettingsPage {
     this.dockerContextDropdownMenu = this.dockerCLICard.getByRole('button', {
       name: 'select-property-docker.cli.context',
     });
+    this.podmanListeningLabel = this.content.getByText('podman is listening');
   }
 
   public async socketIsReachable(): Promise<boolean> {
-    const podmanListeningLabel = this.content.getByText('podman is listening');
     try {
-      await playExpect(podmanListeningLabel).toBeVisible();
-      return await podmanListeningLabel.isVisible();
+      await playExpect(this.podmanListeningLabel).toBeVisible();
+      return await this.podmanListeningLabel.isVisible();
     } catch (error) {
       return false;
     }
