@@ -18,6 +18,7 @@
 
 import type { Locator, Page } from 'playwright';
 
+import { expect as playExpect } from '../../utility/fixtures';
 import { SettingsPage } from './settings-page';
 
 export class DockerCompatibilityPage extends SettingsPage {
@@ -43,7 +44,7 @@ export class DockerCompatibilityPage extends SettingsPage {
   public async socketIsReachable(): Promise<boolean> {
     const podmanListeningLabel = this.content.getByText('podman is listening');
     try {
-      await podmanListeningLabel.waitFor({ state: 'visible' });
+      await playExpect(podmanListeningLabel).toBeVisible();
       return await podmanListeningLabel.isVisible();
     } catch (error) {
       return false;

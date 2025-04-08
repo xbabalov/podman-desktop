@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { execSync } from 'node:child_process';
-
 import type { Page } from '@playwright/test';
 
 import { DockerCompatibilityPage } from '../model/pages/docker-compatibility-page';
@@ -26,6 +24,7 @@ import { PreferencesPage } from '../model/pages/preferences-page';
 import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
+import { createPodmanMachineFromCLI } from '../utility/operations';
 import { isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
@@ -43,16 +42,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 test.afterAll(async ({ runner, page }) => {
   if (test.info().status === 'failed') {
     await setDockerCompatibilityFeature(false, page);
-
-    try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path
-      execSync('podman machine start');
-      console.log('Default podman machine started');
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('VM already running')) {
-        console.log('Default podman machine already started, skipping start.');
-      }
-    }
+    await createPodmanMachineFromCLI();
   }
   await runner.close();
 });
@@ -76,7 +66,7 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     const settingsBar = new SettingsBar(page);
     const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
     await playExpect(dockerCompatibilityPage.heading).toBeVisible();
-    playExpect(await dockerCompatibilityPage.socketIsReachable()).toBeTruthy();
+    await playExpect.poll(async () => await dockerCompatibilityPage.socketIsReachable()).toBeTruthy();
     await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
   });
   test('Verify socket reachability is responding to podman machine status', async ({ page }) => {
@@ -88,7 +78,7 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('OFF', { timeout: 50_000 });
 
     const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
-    playExpect(await dockerCompatibilityPage.socketIsReachable()).toBeFalsy();
+    await playExpect.poll(async () => await dockerCompatibilityPage.socketIsReachable()).toBeFalsy();
     await playExpect(dockerCompatibilityPage.serverInformationBox).not.toBeVisible();
 
     await settingsBar.openTabPage(ResourcesPage);
@@ -97,7 +87,7 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText('RUNNING', { timeout: 50_000 });
 
     await settingsBar.openTabPage(DockerCompatibilityPage);
-    playExpect(await dockerCompatibilityPage.socketIsReachable()).toBeTruthy();
+    await playExpect.poll(async () => await dockerCompatibilityPage.socketIsReachable()).toBeTruthy();
     await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
   });
   test('Disable docker compatibility', async ({ page }) => {
