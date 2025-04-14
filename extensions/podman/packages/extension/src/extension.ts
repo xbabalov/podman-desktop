@@ -112,6 +112,18 @@ const setupPodmanNotification: extensionApi.NotificationOptions = {
 };
 let notificationDisposable: extensionApi.Disposable;
 
+// Notification for if Docker Desktop has overriden the socket other tools are using it.
+const disguisedPodmanNotification: extensionApi.NotificationOptions = {
+  title: 'Docker socket is not disguised correctly',
+  body: 'The Docker socket (/var/run/docker.sock) is not being properly disguised by Podman. This could potentially cause docker-compatible tools to fail. Please disable any conflicting tools and re-enable Docker Compatibility.',
+  markdownActions:
+    ':button[Docker compatibility settings]{href=/preferences/docker-compatibility title="Docker Compatibility settings"}',
+  type: 'error',
+  highlight: true,
+  silent: true,
+};
+let disguisedPodmanNotificationDisposable: extensionApi.Disposable;
+
 // Alert for running podman-mac-helper
 // Add notification that podman-mac-helper needs setting up
 let doNotShowMacHelperSetup = false;
@@ -194,6 +206,11 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
 function notifySetupPodman(): void {
   notificationDisposable?.dispose();
   notificationDisposable = extensionApi.window.showNotification(setupPodmanNotification);
+}
+
+function notifyDisguisedPodmanSocket(): void {
+  disguisedPodmanNotificationDisposable?.dispose();
+  disguisedPodmanNotificationDisposable = extensionApi.window.showNotification(disguisedPodmanNotification);
 }
 
 async function checkAndNotifySetupPodmanMacHelper(): Promise<void> {
@@ -466,10 +483,13 @@ async function doUpdateMachines(
     }
   }
 
-  // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
-  // and if we should notify that we need to run podman-mac-helper, we do so.
   if (extensionApi.env.isMac) {
+    // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
+    // and if we should notify that we need to run podman-mac-helper, we do so.
     await checkAndNotifySetupPodmanMacHelper();
+
+    // Check with regards to the disguised podman socket as well
+    await checkAndNotifyDisguisedPodman();
   }
 }
 
@@ -1513,9 +1533,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // Push the results of the command so we can unload it later
     extensionContext.subscriptions.push(command);
 
-    // After pushing, let's check to see if we need to run podman-mac-helper notification at all
-    // macOS only
+    // Only on macOS
     if (extensionApi.env.isMac) {
+      // At the end, we "double check" that the socket is indeed disguised. We should only do this once on initial
+      // extension activation so that the user isn't constantly prompted with the error message.
+      await checkAndNotifyDisguisedPodman();
+      // After pushing, let's check to see if we need to run podman-mac-helper notification at all
       await checkAndNotifySetupPodmanMacHelper();
     }
   }
@@ -2319,5 +2342,26 @@ export function updateWSLHyperVEnabledContextValue(value: boolean): void {
   if (wslAndHypervEnabledContextValue !== value) {
     wslAndHypervEnabledContextValue = value;
     extensionApi.context.setValue(WSL_HYPERV_ENABLED_KEY, value);
+  }
+}
+
+// Check that the socket is indeed a disguised podman socket, if it is NOT, we should
+// alert the user that compatibility was not ran.
+async function checkAndNotifyDisguisedPodman(): Promise<void> {
+  const socketCompatibilityMode = getSocketCompatibility();
+
+  // Immediate return as we should not be checking if compatibility mode wasn't "enabled" (press Enable button).
+  if (!socketCompatibilityMode.isEnabled()) {
+    return;
+  }
+
+  const isDisguisedPodmanSocket = await isDisguisedPodman();
+
+  // If the socket is not disguised, we should alert the user that compatibility was not ran.
+  if (!isDisguisedPodmanSocket) {
+    notifyDisguisedPodmanSocket();
+  } else {
+    // If it's already disguised, dispose of the notification.
+    disguisedPodmanNotificationDisposable?.dispose();
   }
 }
