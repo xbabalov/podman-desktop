@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ResourceElementState } from '../model/core/states';
 import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -70,7 +71,7 @@ test.describe.serial('Status bar providers feature verification', { tag: '@smoke
     const resourcesPage = new ResourcesPage(page);
     await playExpect(resourcesPage.heading).toBeVisible();
   });
-  test('Verify provider unpin and pin', async ({ statusBar }) => {
+  test('Verify provider pinning', async ({ statusBar }) => {
     await statusBar.pinProvider(podmanProviderName, false);
     await statusBar.pinProvider(podmanProviderName, true);
   });
@@ -78,15 +79,19 @@ test.describe.serial('Status bar providers feature verification', { tag: '@smoke
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, defaultMachine)).toBeTruthy();
   });
   test('Create and delete new resource and verify providers updated', async ({ page, statusBar }) => {
-    test.setTimeout(200_000);
+    test.setTimeout(300_000);
 
     //Create a new machine
     const settingsBar = new SettingsBar(page);
     await settingsBar.resourcesTab.click();
-    const podmanResources = new ResourceConnectionCardPage(page, podmanProviderName);
+    const podmanResources = new ResourceConnectionCardPage(page, 'podman');
     await podmanResources.createButton.click();
     const createMachinePage = new CreateMachinePage(page);
-    await createMachinePage.createMachine(newMachineName, { startNow: true });
+    await createMachinePage.createMachine(newMachineName, { startNow: true, setAsDefault: false });
+
+    const machineCard = new ResourceConnectionCardPage(page, 'podman', newMachineName);
+    playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
+    playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Running);
 
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeTruthy();
 
