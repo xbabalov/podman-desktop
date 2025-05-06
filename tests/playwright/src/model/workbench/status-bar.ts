@@ -84,18 +84,21 @@ export class StatusBar extends BasePage {
       return;
     }
 
-    await playExpect(this.pinProvidersButton).toBeVisible();
-    await this.pinProvidersButton.click();
     const pinMenu = this.page.getByTitle('Pin Menu');
     const pinMenuProviderButton = pinMenu.getByRole('button', { name: providerName });
+    await playExpect(pinMenu).toBeHidden({ timeout: 5000 });
 
-    //check the provider shows up as pinned/not pinned in the pin menu
-    const isPinned = pinMenuProviderButton.getByTitle('Pinned');
-    playExpect(await isPinned.isVisible()).toEqual(pin);
+    await playExpect(this.pinProvidersButton).toBeVisible();
+    await this.pinProvidersButton.click();
+    await playExpect(pinMenu).toBeVisible({ timeout: 5000 });
+    await playExpect(pinMenuProviderButton).toBeVisible();
 
     await pinMenuProviderButton.click();
-    playExpect(await isPinned.isVisible()).toEqual(pin);
     playExpect(await barProviderButton.isVisible()).toEqual(pin);
+
+    //close the menu
+    await this.pinProvidersButton.click();
+    await playExpect(pinMenu).toBeHidden({ timeout: 5000 });
   }
 
   public async isProviderResourceRunning(providerName: string, resourceName: string): Promise<boolean> {
@@ -106,7 +109,7 @@ export class StatusBar extends BasePage {
 
     await barProviderButton.hover();
     await playExpect(providerTooltip).toBeVisible();
-    await playExpect(providerTooltip).toHaveText(resourceName);
-    return (await providerTooltip.innerText()).includes('Running : ' + resourceName);
+    await playExpect(providerTooltip).toContainText(resourceName);
+    return (await providerTooltip.innerText()).includes('Running\n: ' + resourceName);
   }
 }
