@@ -2059,6 +2059,10 @@ export async function isHyperVEnabled(): Promise<boolean> {
   return hyperVCheckResult.successful;
 }
 
+export function isPodman5OrLater(podmanVersion: string): boolean {
+  return compareVersions(podmanVersion, '5.0.0') >= 0;
+}
+
 export function sendTelemetryRecords(
   eventName: string,
   telemetryRecords: Record<string, unknown>,
@@ -2207,10 +2211,10 @@ export async function createMachine(
     telemetryRecords.diskSize = params['podman.factory.machine.diskSize'];
   }
 
-  const installedPodman = await getPodmanInstallation();
-  const version = installedPodman?.version;
-  const isPodmanV5OrLater = version?.startsWith('5.') ?? false;
-
+  const podmanInstallation = await getPodmanInstallation();
+  const version = podmanInstallation?.version;
+  // check for podman major version
+  const isPodmanV5OrLater = version ? isPodman5OrLater(version) : false;
   // image
   if (params['podman.factory.machine.image'] && typeof params['podman.factory.machine.image'] === 'string') {
     if (isPodmanV5OrLater) {

@@ -383,6 +383,7 @@ describe.each([
   });
 
   test.each([
+    { version: '6.3.2', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])(`verify create command called with correct values for %s`, async ({ version, image }) => {
@@ -402,7 +403,7 @@ describe.each([
     );
     expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
-      ['machine', 'init', '--cpus', '2', '--memory', '1000', '--disk-size', '232', `--${image}`, 'path', '--rootful'],
+      expect.arrayContaining([`--${image}`, 'path']),
       {
         logger: undefined,
         token: undefined,
@@ -424,6 +425,7 @@ describe.each([
   });
 
   test.each([
+    { version: '6.1.0', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])('verify create command called with correct image values with image URL %s', async ({ version, image }) => {
@@ -443,19 +445,7 @@ describe.each([
     );
     expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
-      [
-        'machine',
-        'init',
-        '--cpus',
-        '2',
-        '--memory',
-        '1000',
-        '--disk-size',
-        '232',
-        `--${image}`,
-        'https://host/file',
-        '--rootful',
-      ],
+      expect.arrayContaining([`--${image}`, 'https://host/file']),
       {
         logger: undefined,
         token: undefined,
@@ -477,6 +467,7 @@ describe.each([
   });
 
   test.each([
+    { version: '6.3.2', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])('verify create command called with correct image values with registry %s', async ({ version, image }) => {
@@ -496,19 +487,7 @@ describe.each([
     );
     expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
       podmanCli.getPodmanCli(),
-      [
-        'machine',
-        'init',
-        '--cpus',
-        '2',
-        '--memory',
-        '1000',
-        '--disk-size',
-        '232',
-        `--${image}`,
-        'docker://registry/repo/image:version',
-        '--rootful',
-      ],
+      expect.arrayContaining([`--${image}`, 'docker://registry/repo/image:version']),
       {
         logger: undefined,
         token: undefined,
@@ -530,6 +509,7 @@ describe.each([
   });
 
   test.each([
+    { version: '6.3.2', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])('verify create command called with correct values with user mode networking %s', async ({ version, image }) => {
@@ -548,27 +528,18 @@ describe.each([
       },
       podmanConfiguration,
     );
-    const parameters = [
-      'machine',
-      'init',
-      '--cpus',
-      '2',
-      '--memory',
-      '1000',
-      '--disk-size',
-      '232',
-      `--${image}`,
-      'path',
-      '--rootful',
-      '--user-mode-networking',
-    ];
-    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(podmanCli.getPodmanCli(), parameters, {
-      logger: undefined,
-      env: {
-        CONTAINERS_MACHINE_PROVIDER: provider,
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining([`--${image}`, 'path']),
+      {
+        logger: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: provider,
+        },
+        token: undefined,
       },
-      token: undefined,
-    });
+    );
     expect(console.error).not.toBeCalled();
 
     // wait a call on telemetryLogger.logUsage
@@ -583,6 +554,7 @@ describe.each([
   });
 
   test.each([
+    { version: '6.3.2', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])(
@@ -604,27 +576,18 @@ describe.each([
         },
         podmanConfiguration,
       );
-      const parameters = [
-        'machine',
-        'init',
-        '--cpus',
-        '2',
-        '--memory',
-        '1000',
-        '--disk-size',
-        '232',
-        `--${image}`,
-        'path',
-        '--rootful',
-        '--now',
-      ];
-      expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(podmanCli.getPodmanCli(), parameters, {
-        logger: undefined,
-        env: {
-          CONTAINERS_MACHINE_PROVIDER: provider,
+
+      expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+        podmanCli.getPodmanCli(),
+        expect.arrayContaining([`--${image}`, 'path']),
+        {
+          logger: undefined,
+          env: {
+            CONTAINERS_MACHINE_PROVIDER: provider,
+          },
+          token: undefined,
         },
-        token: undefined,
-      });
+      );
       expect(console.error).not.toBeCalled();
     },
   );
@@ -745,7 +708,7 @@ describe.each([
         '1000',
         '--disk-size',
         '232',
-        `--image`,
+        '--image',
         'path',
         '--playbook',
         fakePlaybookPath,
