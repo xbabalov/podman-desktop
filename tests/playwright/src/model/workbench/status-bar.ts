@@ -109,7 +109,6 @@ export class StatusBar extends BasePage {
 
     await barProviderButton.hover();
     await playExpect(providerTooltip).toBeVisible();
-    await playExpect(providerTooltip).toContainText(resourceName);
     return (await providerTooltip.innerText()).includes('Running\n: ' + resourceName);
   }
 }

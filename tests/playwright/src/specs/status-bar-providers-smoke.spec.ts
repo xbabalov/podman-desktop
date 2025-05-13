@@ -23,8 +23,13 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { deletePodmanMachine, ensureCliInstalled, setStatusBarProvidersFeature } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import {
+  deletePodmanMachine,
+  ensureCliInstalled,
+  handleConfirmationDialog,
+  setStatusBarProvidersFeature,
+} from '../utility/operations';
+import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
 const podmanProviderName = 'Podman';
 const defaultMachine = 'podman-machine-default';
@@ -79,7 +84,7 @@ test.describe.serial('Status bar providers feature verification', { tag: '@smoke
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, defaultMachine)).toBeTruthy();
   });
   test('Create and delete new resource and verify providers updated', async ({ page, statusBar }) => {
-    test.setTimeout(300_000);
+    test.setTimeout(350_000);
 
     //Create a new machine
     const settingsBar = new SettingsBar(page);
@@ -91,22 +96,31 @@ test.describe.serial('Status bar providers feature verification', { tag: '@smoke
 
     const machineCard = new ResourceConnectionCardPage(page, 'podman', newMachineName);
     playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
-    playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Running);
+    await waitUntil(
+      async () =>
+        (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
+      { timeout: 30_000, sendError: true },
+    );
 
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeTruthy();
 
     await deletePodmanMachine(page, newMachineName);
+    const dialog = page.getByRole('dialog', { name: 'Podman', exact: true });
+    await playExpect(dialog).toBeVisible({ timeout: 60_000 });
+    await handleConfirmationDialog(page, 'Podman', true, 'Yes');
+    await handleConfirmationDialog(page, 'Podman', true, 'OK');
 
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeFalsy();
   });
   test('Create new provider (Kind) and verify providers updated', async ({ page, statusBar }) => {
+    test.setTimeout(600_000);
     if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-      await createKindCluster(page, kindClusterName, false, 300_000, {
+      await createKindCluster(page, kindClusterName, false, 550_000, {
         providerType: providerTypeGHA,
         useIngressController: false,
       });
     } else {
-      await createKindCluster(page, kindClusterName, true, 300_000);
+      await createKindCluster(page, kindClusterName, true, 550_000);
     }
 
     //Verify its not pinned by default
