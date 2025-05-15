@@ -13,6 +13,7 @@ import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
 import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
+import { TestimonialCard } from '../components/TestimonialCard';
 
 function Hero(): JSX.Element {
   return (
@@ -255,6 +256,47 @@ function Configure(): JSX.Element {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials(): JSX.Element {
+  return (
+    <section className="relative text-gray-900 dark:text-white body-font py-24 dark:bg-fuschia-900 bg-purple-200">
+      <div className="absolute bg-white/50 dark:bg-black/70 top-0 bottom-0 right-0 left-0 z-0"></div>
+      <div className="container mx-auto flex flex-col">
+        <h2 className="text-4xl/[1.5] font-bold mb-6 text-gray-900 dark:text-white pb-11 z-10">
+          What People Are Saying ✨
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10">
+          <TestimonialCard
+            username="Ayush Pande"
+            source="XDA Developers"
+            userImage="https://static1.xdaimages.com/wordpress%2Fwp-content%2Fauthors%2F66963136cc077-ayush-pande.jpg?q=50&fit=crop&w=360&h=360&dpr=1.5"
+            date="April 20 2025"
+            text="Unlike its rival, Podman Desktop not only supports multiple container runtimes (including Docker Desktop), but also includes a ton of extensions to boost your workstation's capabilities."
+          />
+          <TestimonialCard
+            username="DonSchenck"
+            userImage="https://pbs.twimg.com/profile_images/1774956557161115648/Y_GLSoGT_400x400.jpg"
+            source="X"
+            date="April 25 2025"
+            text="Dude ... podman. And Podman Desktop. Seriously. Open Source and doesn't run as root."
+          />
+          <TestimonialCard
+            username="anonymous"
+            source="GitHub discussions"
+            date="April 5 2024"
+            text="I have spent a lot of hours trying out various projects in the past few months for my homelab to test some custom workloads.... OpenStack (Devstack), k3s, rancher, portainer, minikube, docker desktop, etc. and I have found what I needed with your Podman Desktop."
+          />
+          <TestimonialCard
+            username="José Bayoán Santiago Calderón"
+            userImage="https://media.licdn.com/dms/image/v2/D5635AQG6ohtsrwtWFA/profile-framedphoto-shrink_200_200/profile-framedphoto-shrink_200_200/0/1737612334868?e=1747674000&v=beta&t=EruTwnMCgArUXZfCBwBZzWQJUbbQMaUB-whOPJag6QU"
+            source="LinkedIn"
+            text="I'm pleasantly surprised by how well Podman Desktop integrates with the Visual Studio Code Dev Containers extension. #dev #opensource #containers"
+          />
         </div>
       </div>
     </section>
@@ -660,6 +702,7 @@ export default function Home(): JSX.Element {
       <MainFeatures />
       <Pods />
       <AdditionalFeatures />
+      <Testimonials />
       <Configure />
       <Extensibility />
       <KeepUpToDate />
