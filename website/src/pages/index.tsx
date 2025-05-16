@@ -1,4 +1,5 @@
 import BrowserOnly from '@docusaurus/BrowserOnly';
+import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import ThemedImage from '@theme/ThemedImage';
@@ -7,6 +8,7 @@ import React from 'react';
 import { CNCFCommunityBanner } from '../components/CNCFCommunityBanner';
 import CommunityBanner from '../components/CommunityBanner';
 import { DownloadClientLinks, DownloadGenericLinks } from '../components/DownloadButton';
+import { ExpandableFAQ } from '../components/ExpandableFAQ';
 import { ReadTheDocsButton } from '../components/ReadTheDocsButton';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
 import { TestimonialCard } from '../components/TestimonialCard';
@@ -92,6 +94,72 @@ function Testimonials(): JSX.Element {
             userImage="https://media.licdn.com/dms/image/v2/D5635AQG6ohtsrwtWFA/profile-framedphoto-shrink_200_200/profile-framedphoto-shrink_200_200/0/1737612334868?e=1747674000&v=beta&t=EruTwnMCgArUXZfCBwBZzWQJUbbQMaUB-whOPJag6QU"
             source="LinkedIn"
             text="I'm pleasantly surprised by how well Podman Desktop integrates with the Visual Studio Code Dev Containers extension. #dev #opensource #containers"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FAQ(): JSX.Element {
+  return (
+    <section className="dark:text-white text-charcoal-300 py-24 font-body text-4xl font-bold leading-[1.2] bg-white dark:bg-black bg-gradient-to-br from-purple-300/70 dark:from-purple-800 to-transparent">
+      <div className="container mx-auto flex flex-col">
+        <h2 className="text-4xl font-bold leading-[1.2]">FAQ</h2>
+        <div className="p-8">
+          <ExpandableFAQ
+            title="Is Podman Desktop free?"
+            text={
+              <p>
+                Yes, Podman Desktop is an open-source project released under the GNU Lesser General Public License
+                (LGPL). This means that it is freely available for use, modification, and distribution by anyone,
+                without charge or licensing fees. Users can download and use Podman Desktop at no cost, making it
+                accessible to individuals and organizations alike.
+              </p>
+            }
+          />
+          <ExpandableFAQ
+            title="Is Podman Desktop suitable for enterprise use?"
+            text={
+              <p>
+                Yes, Podman Desktop is well-suited for enterprise use, offering a robust and secure application for
+                managing containers and Kubernetes. Its support for rootless containers enhances security and simplifies
+                compliance, while its compatibility with Docker and seamless integration with existing enterprise tools
+                and workflows make it an attractive option for organizations looking to modernize their development.
+              </p>
+            }
+          />
+          <ExpandableFAQ
+            title="How do I get involved on the project?"
+            text={
+              <p>
+                You can get invloved in the project by visiting our{' '}
+                <Link
+                  title="GitHub page"
+                  href="https://github.com/podman-desktop/podman-desktop"
+                  className="dark:text-purple-300">
+                  GitHub page
+                </Link>{' '}
+                and opening a PR, reporting bugs, suggesting new features and enhancements, providing feedback, and
+                more. Every action counts and helps us improve Podman Desktop.
+              </p>
+            }
+          />
+          <ExpandableFAQ
+            title="Does Podman Desktop support Compose?"
+            text={
+              <p>
+                Yes, Podman Desktop supports Compose. You can download the Compose extension to help set up Compose if
+                it is not yet installed. For more information and examples, visit our{' '}
+                <Link
+                  title="Getting started with Compose"
+                  to="/tutorial/getting-started-with-compose"
+                  className="dark:text-purple-300">
+                  Getting started with Compose
+                </Link>
+                . page.
+              </p>
+            }
           />
         </div>
       </div>
@@ -374,6 +442,7 @@ export default function Home(): JSX.Element {
       <Pods />
       <AdditionalFeatures />
       <Testimonials />
+      <FAQ />
     </Layout>
   );
 }
