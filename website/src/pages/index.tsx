@@ -357,7 +357,7 @@ function Pods(): JSX.Element {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 space-x-4 pt-16">
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
-                className="py-4 w-1/4"
+                className="py-4 h-[90px]"
                 alt="Develop and Test"
                 sources={{
                   light: useBaseUrl('img/developtest.svg'),
@@ -374,7 +374,7 @@ function Pods(): JSX.Element {
             </div>
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
-                className="py-4 w-1/4"
+                className="py-4 h-[90px]"
                 alt="Grow Your Skills at Your Pace"
                 sources={{
                   light: useBaseUrl('img/grow.svg'),
@@ -391,7 +391,7 @@ function Pods(): JSX.Element {
             </div>
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
-                className="py-4 w-1/4"
+                className="py-4 h-[90px]"
                 alt="Troubleshoot with Ease"
                 sources={{
                   light: useBaseUrl('img/troubleshoot1.svg'),
@@ -408,7 +408,7 @@ function Pods(): JSX.Element {
             </div>
             <div className="flex flex-col md:items-start md:text-left items-center text-center">
               <ThemedImage
-                className="py-4 w-1/4"
+                className="py-4 h-[90px]"
                 alt="Troubleshoot with Ease"
                 sources={{
                   light: useBaseUrl('img/troubleshoot2.svg'),
