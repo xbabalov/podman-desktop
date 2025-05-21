@@ -63,82 +63,81 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
   await runner.close();
 });
 
-test.describe
-  .serial('Status bar providers feature verification', () => {
-    test('Enable status bar providers experimental feature', async ({ navigationBar, page }) => {
-      await setStatusBarProvidersFeature(page, navigationBar, true);
-    });
-    test('Verify default Podman provider in status bar', async ({ statusBar }) => {
-      const podmanStatusBarProviderButton = await statusBar.getProviderButton(podmanProviderName);
-      await playExpect(podmanStatusBarProviderButton).toBeVisible();
-    });
-    test('Verify clicking on provider', async ({ statusBar, page }) => {
-      const podmanStatusBarProviderButton = await statusBar.getProviderButton(podmanProviderName);
-      await podmanStatusBarProviderButton.click();
-      const resourcesPage = new ResourcesPage(page);
-      await playExpect(resourcesPage.heading).toBeVisible();
-    });
-    test('Verify provider pinning', async ({ statusBar }) => {
-      await statusBar.pinProvider(podmanProviderName, false);
-      await statusBar.pinProvider(podmanProviderName, true);
-    });
-    test('Verify hovering podman provider shows machine status', async ({ statusBar }) => {
-      if (isLinux) {
-        playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, podmanProviderName)).toBeTruthy();
-      } else {
-        playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, defaultMachine)).toBeTruthy();
-      }
-    });
-    test('Create and delete new resource and verify providers updated', async ({ page, statusBar }) => {
-      test.skip(isLinux, 'Not creating new machine on Linux');
-      test.setTimeout(350_000);
-
-      //Create a new machine
-      const settingsBar = new SettingsBar(page);
-      await settingsBar.resourcesTab.click();
-      const podmanResources = new ResourceConnectionCardPage(page, 'podman');
-      await podmanResources.createButton.click();
-      const createMachinePage = new CreateMachinePage(page);
-      await createMachinePage.createMachine(newMachineName, { startNow: true, setAsDefault: false });
-
-      const machineCard = new ResourceConnectionCardPage(page, 'podman', newMachineName);
-      playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
-      await waitUntil(
-        async () =>
-          (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-        { timeout: 30_000, sendError: true },
-      );
-
-      playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeTruthy();
-
-      await deletePodmanMachine(page, newMachineName);
-      const dialog = page.getByRole('dialog', { name: 'Podman', exact: true });
-      await playExpect(dialog).toBeVisible({ timeout: 60_000 });
-      await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-      await handleConfirmationDialog(page, 'Podman', true, 'OK');
-
-      playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeFalsy();
-    });
-    test('Create new provider (Kind) and verify providers updated', async ({ page, statusBar }) => {
-      test.setTimeout(600_000);
-      if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
-        await createKindCluster(page, kindClusterName, false, 550_000, {
-          providerType: providerTypeGHA,
-          useIngressController: false,
-        });
-      } else {
-        await createKindCluster(page, kindClusterName, true, 550_000);
-      }
-
-      //Verify its not pinned by default
-      const kindStatusBarProviderButton = await statusBar.getProviderButton(kindProviderName);
-      await playExpect(kindStatusBarProviderButton).not.toBeVisible();
-
-      await statusBar.pinProvider(kindProviderName, true);
-      playExpect(await statusBar.isProviderResourceRunning(kindProviderName, kindClusterName)).toBeTruthy();
-    });
-    test('Disable status bar providers feature', async ({ page, navigationBar, statusBar }) => {
-      await setStatusBarProvidersFeature(page, navigationBar, false);
-      await playExpect(statusBar.pinProvidersButton).not.toBeVisible();
-    });
+test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e2e' }, () => {
+  test('Enable status bar providers experimental feature', async ({ navigationBar, page }) => {
+    await setStatusBarProvidersFeature(page, navigationBar, true);
   });
+  test('Verify default Podman provider in status bar', async ({ statusBar }) => {
+    const podmanStatusBarProviderButton = await statusBar.getProviderButton(podmanProviderName);
+    await playExpect(podmanStatusBarProviderButton).toBeVisible();
+  });
+  test('Verify clicking on provider', async ({ statusBar, page }) => {
+    const podmanStatusBarProviderButton = await statusBar.getProviderButton(podmanProviderName);
+    await podmanStatusBarProviderButton.click();
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect(resourcesPage.heading).toBeVisible();
+  });
+  test('Verify provider pinning', async ({ statusBar }) => {
+    await statusBar.pinProvider(podmanProviderName, false);
+    await statusBar.pinProvider(podmanProviderName, true);
+  });
+  test('Verify hovering podman provider shows machine status', async ({ statusBar }) => {
+    if (isLinux) {
+      playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, podmanProviderName)).toBeTruthy();
+    } else {
+      playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, defaultMachine)).toBeTruthy();
+    }
+  });
+  test('Create and delete new resource and verify providers updated', async ({ page, statusBar }) => {
+    test.skip(isLinux, 'Not creating new machine on Linux');
+    test.setTimeout(350_000);
+
+    //Create a new machine
+    const settingsBar = new SettingsBar(page);
+    await settingsBar.resourcesTab.click();
+    const podmanResources = new ResourceConnectionCardPage(page, 'podman');
+    await podmanResources.createButton.click();
+    const createMachinePage = new CreateMachinePage(page);
+    await createMachinePage.createMachine(newMachineName, { startNow: true, setAsDefault: false });
+
+    const machineCard = new ResourceConnectionCardPage(page, 'podman', newMachineName);
+    playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
+    await waitUntil(
+      async () =>
+        (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
+      { timeout: 30_000, sendError: true },
+    );
+
+    playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeTruthy();
+
+    await deletePodmanMachine(page, newMachineName);
+    const dialog = page.getByRole('dialog', { name: 'Podman', exact: true });
+    await playExpect(dialog).toBeVisible({ timeout: 60_000 });
+    await handleConfirmationDialog(page, 'Podman', true, 'Yes');
+    await handleConfirmationDialog(page, 'Podman', true, 'OK');
+
+    playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeFalsy();
+  });
+  test('Create new provider (Kind) and verify providers updated', async ({ page, statusBar }) => {
+    test.setTimeout(600_000);
+    if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
+      await createKindCluster(page, kindClusterName, false, 550_000, {
+        providerType: providerTypeGHA,
+        useIngressController: false,
+      });
+    } else {
+      await createKindCluster(page, kindClusterName, true, 550_000);
+    }
+
+    //Verify its not pinned by default
+    const kindStatusBarProviderButton = await statusBar.getProviderButton(kindProviderName);
+    await playExpect(kindStatusBarProviderButton).not.toBeVisible();
+
+    await statusBar.pinProvider(kindProviderName, true);
+    playExpect(await statusBar.isProviderResourceRunning(kindProviderName, kindClusterName)).toBeTruthy();
+  });
+  test('Disable status bar providers feature', async ({ page, navigationBar, statusBar }) => {
+    await setStatusBarProvidersFeature(page, navigationBar, false);
+    await playExpect(statusBar.pinProvidersButton).not.toBeVisible();
+  });
+});

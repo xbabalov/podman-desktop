@@ -77,7 +77,7 @@ export class StatusBar extends BasePage {
 
   public async getProviderButton(providerName: string): Promise<Locator> {
     await playExpect(this.pinProvidersButton, 'status bar providers must be turned on').toBeVisible();
-    return this.content.getByRole('button', { name: providerName });
+    return this.content.getByRole('button', { name: providerName, exact: true });
   }
 
   public async pinProvider(providerName: string, pin: boolean): Promise<void> {
@@ -86,8 +86,8 @@ export class StatusBar extends BasePage {
       return;
     }
 
-    const pinMenuProviderButton = this.pinMenu.getByRole('button', { name: providerName, exact: true });
-    await playExpect(this.pinMenu).toBeHidden({ timeout: 5000 });
+    const pinMenuProviderButton = this.pinMenu.getByRole('button', { name: providerName });
+    await playExpect(this.pinMenu).not.toBeVisible({ timeout: 5000 });
 
     await playExpect(this.pinProvidersButton).toBeVisible();
     await this.pinProvidersButton.click();
