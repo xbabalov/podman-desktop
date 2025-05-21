@@ -33,6 +33,7 @@ export class StatusBar extends BasePage {
   readonly tasksButton: Locator;
   readonly helpButton: Locator;
   readonly pinProvidersButton: Locator;
+  readonly pinMenu: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -48,6 +49,7 @@ export class StatusBar extends BasePage {
     this.tasksButton = this.content.getByRole('button').and(this.content.getByTitle('Tasks'));
     this.helpButton = this.content.getByRole('button').and(this.content.getByTitle('Help'));
     this.pinProvidersButton = this.content.getByRole('button', { name: 'Pin' });
+    this.pinMenu = this.page.getByTitle('Pin Menu');
   }
 
   public async installKindCLI(): Promise<void> {
@@ -74,7 +76,7 @@ export class StatusBar extends BasePage {
   }
 
   public async getProviderButton(providerName: string): Promise<Locator> {
-    await playExpect(this.pinProvidersButton).toBeVisible(); //status bar providers must be on
+    await playExpect(this.pinProvidersButton, 'status bar providers must be turned on').toBeVisible();
     return this.content.getByRole('button', { name: providerName });
   }
 
@@ -84,13 +86,12 @@ export class StatusBar extends BasePage {
       return;
     }
 
-    const pinMenu = this.page.getByTitle('Pin Menu');
-    const pinMenuProviderButton = pinMenu.getByRole('button', { name: providerName });
-    await playExpect(pinMenu).toBeHidden({ timeout: 5000 });
+    const pinMenuProviderButton = this.pinMenu.getByRole('button', { name: providerName, exact: true });
+    await playExpect(this.pinMenu).toBeHidden({ timeout: 5000 });
 
     await playExpect(this.pinProvidersButton).toBeVisible();
     await this.pinProvidersButton.click();
-    await playExpect(pinMenu).toBeVisible({ timeout: 5000 });
+    await playExpect(this.pinMenu).toBeVisible({ timeout: 5000 });
     await playExpect(pinMenuProviderButton).toBeVisible();
 
     await pinMenuProviderButton.click();
@@ -98,7 +99,7 @@ export class StatusBar extends BasePage {
 
     //close the menu
     await this.pinProvidersButton.click();
-    await playExpect(pinMenu).toBeHidden({ timeout: 5000 });
+    await playExpect(this.pinMenu).not.toBeVisible({ timeout: 5000 });
   }
 
   public async isProviderResourceRunning(providerName: string, resourceName: string): Promise<boolean> {
