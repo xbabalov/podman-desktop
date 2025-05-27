@@ -21,6 +21,7 @@ import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
+import { canRunKindTests } from '../setupFiles/setup-kind';
 import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
 import { expect as playExpect, test } from '../utility/fixtures';
 import {
@@ -121,6 +122,7 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeFalsy();
   });
   test('Create new provider (Kind) and verify providers updated', async ({ page, statusBar }) => {
+    test.skip(!canRunKindTests(), `This test can't run on a windows rootless machine`);
     test.setTimeout(600_000);
     if (process.env.GITHUB_ACTIONS && process.env.RUNNER_OS === 'Linux') {
       await createKindCluster(page, kindClusterName, false, 550_000, {
