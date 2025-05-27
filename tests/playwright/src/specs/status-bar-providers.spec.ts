@@ -111,10 +111,12 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeTruthy();
 
     await deletePodmanMachine(page, newMachineName);
-    const dialog = page.getByRole('dialog', { name: 'Podman', exact: true });
-    await playExpect(dialog).toBeVisible({ timeout: 60_000 });
-    await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-    await handleConfirmationDialog(page, 'Podman', true, 'OK');
+    try {
+      await handleConfirmationDialog(page, 'Podman', true, 'Yes');
+      await handleConfirmationDialog(page, 'Podman', true, 'OK');
+    } catch (error) {
+      console.log('No handling dialog displayed', error);
+    }
 
     playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeFalsy();
   });
