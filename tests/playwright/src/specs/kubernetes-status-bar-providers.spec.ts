@@ -84,9 +84,13 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
   });
   test('Verify hovering podman provider shows machine status', async ({ statusBar }) => {
     if (isLinux) {
-      playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, podmanProviderName)).toBeTruthy();
+      await playExpect
+        .poll(async () => await statusBar.isProviderResourceRunning(podmanProviderName, podmanProviderName))
+        .toBeTruthy();
     } else {
-      playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, defaultMachine)).toBeTruthy();
+      await playExpect
+        .poll(async () => await statusBar.isProviderResourceRunning(podmanProviderName, defaultMachine))
+        .toBeTruthy();
     }
   });
   test('Create and delete new resource and verify providers updated', async ({ page, statusBar }) => {
@@ -138,7 +142,9 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
     await playExpect(kindStatusBarProviderButton).not.toBeVisible();
 
     await statusBar.pinProvider(kindProviderName, true);
-    playExpect(await statusBar.isProviderResourceRunning(kindProviderName, kindClusterName)).toBeTruthy();
+    await playExpect
+      .poll(async () => await statusBar.isProviderResourceRunning(kindProviderName, kindClusterName))
+      .toBeTruthy();
   });
   test('Disable status bar providers feature', async ({ page, navigationBar, statusBar }) => {
     await setStatusBarProvidersFeature(page, navigationBar, false);

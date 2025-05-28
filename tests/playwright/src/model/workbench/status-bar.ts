@@ -95,7 +95,7 @@ export class StatusBar extends BasePage {
     await playExpect(pinMenuProviderButton).toBeVisible();
 
     await pinMenuProviderButton.click();
-    playExpect(await barProviderButton.isVisible()).toEqual(pin);
+    await playExpect.poll(async () => await barProviderButton.isVisible()).toEqual(pin);
 
     //close the menu
     await this.pinProvidersButton.click();
