@@ -149,8 +149,8 @@ importers:
         specifier: 'workspace:'
         version: link:packages/extension-api
       '@rollup/plugin-commonjs':
-        specifier: ^28.0.5
-        version: 28.0.5(rollup@4.40.1)
+        specifier: ^28.0.6
+        version: 28.0.6(rollup@4.40.1)
       '@rollup/plugin-json':
         specifier: ^6.1.0
         version: 6.1.0(rollup@4.40.1)
@@ -3337,8 +3337,8 @@ packages:
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
-  '@rollup/plugin-commonjs@28.0.5':
-    resolution: {integrity: sha512-lytLp2JgAMwqJY6ve3OSROXr2XuEYHjnsQN3hmnxC+w11dI91LuUw4Yc1kk2FqKXeMG8psoFejFgK+znoij0cg==}
+  '@rollup/plugin-commonjs@28.0.6':
+    resolution: {integrity: sha512-XSQB1K7FUU5QP+3lOQmVCE3I0FcbbNvmNT4VJSj93iUjayaARrTQeoRdiYQoftAJBLrR9t2agwAd3ekaTgHNlw==}
     engines: {node: '>=16.0.0 || 14 >= 14.17'}
     peerDependencies:
       rollup: ^4.22.5
@@ -15348,9 +15348,9 @@ snapshots:
 
   '@protobufjs/utf8@1.1.0': {}
 
-  '@rollup/plugin-commonjs@28.0.5(rollup@4.40.1)':
+  '@rollup/plugin-commonjs@28.0.6(rollup@4.40.1)':
     dependencies:
-      '@rollup/pluginutils': 5.1.4(rollup@4.40.1)
+      '@rollup/pluginutils': 5.2.0(rollup@4.40.1)
       commondir: 1.0.1
       estree-walker: 2.0.2
       fdir: 6.4.6(picomatch@4.0.2)
