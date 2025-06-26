@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ContainerInfo } from '/@api/container-info';
 import type { ProviderInfo } from '/@api/provider-info';
@@ -33,13 +33,28 @@ import { containersInfos } from '../../stores/containers';
 import { providerInfos } from '../../stores/providers';
 import ContainerList from './ContainerList.svelte';
 
-// fake the window.events object
-beforeAll(() => {
+beforeEach(() => {
+  vi.resetAllMocks();
   vi.mocked(window.listPods).mockResolvedValue([]);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
+  vi.mocked(window.listContainers).mockResolvedValue([]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as ProviderInfo,
+  ]);
+  // fake the window.events object
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
       func();
@@ -283,10 +298,6 @@ test('Try to delete a pod that has containers', async () => {
 });
 
 test('Try to delete a container without deleting pods', async () => {
-  vi.mocked(window.removePod).mockClear();
-  vi.mocked(window.deleteContainer).mockClear();
-  vi.mocked(window.listContainers).mockResolvedValue([]);
-
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
@@ -366,10 +377,6 @@ test('Try to delete a container without deleting pods', async () => {
 });
 
 test('Try to delete a pod without deleting container', async () => {
-  vi.mocked(window.removePod).mockClear();
-  vi.mocked(window.deleteContainer).mockClear();
-  vi.mocked(window.listContainers).mockResolvedValue([]);
-
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
@@ -558,10 +565,6 @@ test('Expect clear filter in empty screen to clear serach term, except is:...', 
 });
 
 test('Expect to display running / stopped containers depending on tab', async () => {
-  vi.mocked(window.removePod).mockClear();
-  vi.mocked(window.deleteContainer).mockClear();
-  vi.mocked(window.listContainers).mockResolvedValue([]);
-
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
@@ -880,10 +883,6 @@ test('Expect user confirmation to pop up when preferences require', async () => 
 });
 
 test('Try to run pods in bulk', async () => {
-  vi.mocked(window.startPod).mockClear();
-  vi.mocked(window.startContainer).mockClear();
-  vi.mocked(window.listContainers).mockResolvedValue([]);
-
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
