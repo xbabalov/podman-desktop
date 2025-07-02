@@ -2177,7 +2177,12 @@ export async function createMachine(
       provider = wslEnabled ? 'wsl' : 'hyperv';
       telemetryRecords.provider = provider;
     } else if (extensionApi.env.isMac) {
-      provider = 'applehv';
+      if (os.arch() === 'x64') {
+        // Intel machine
+        provider = VMTYPE.APPLEHV;
+      } else {
+        provider = VMTYPE.LIBKRUN;
+      }
       telemetryRecords.provider = provider;
     }
   }
