@@ -323,11 +323,19 @@ $effect(() => {
   }
   buildImageInfo.selectedProvider = selectedProvider;
 });
+
+let errorContainerImageName = $derived(
+  buildImageInfo.containerImageName === buildImageInfo.containerImageName.toLowerCase()
+    ? undefined
+    : 'Image name should be lowercase',
+);
+
 let hasInvalidFields = $derived(
   !buildImageInfo.containerFilePath ||
     !buildImageInfo.containerBuildContextDirectory ||
     (platforms.length > 1 && !buildImageInfo.containerImageName) ||
     platforms.length === 0 ||
+    !!errorContainerImageName ||
     !selectedProvider,
 );
 </script>
@@ -374,6 +382,7 @@ let hasInvalidFields = $derived(
           name="containerImageName"
           id="containerImageName"
           placeholder="Image name (e.g. quay.io/namespace/my-custom-image)"
+          error={errorContainerImageName}
           class="w-full" />
       </div>
 
