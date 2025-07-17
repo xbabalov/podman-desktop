@@ -2,6 +2,7 @@
 import { Button, Checkbox, ErrorMessage, Input, StatusIcon } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
@@ -20,7 +21,7 @@ import WarningMessage from '../ui/WarningMessage.svelte';
 let podCreation: PodCreation;
 let createInProgress = false;
 let createError: string | undefined = undefined;
-let mapPortExposed = new Map<number, { exposed: boolean; container: string }>();
+let mapPortExposed = new SvelteMap<number, { exposed: boolean; container: string }>();
 let containersPorts: { containers: string[]; ports: number[] }[] = [];
 
 let providers: ProviderInfo[] = [];
