@@ -86,9 +86,6 @@ const podmanMachinesInfo = new Map<string, MachineInfo>();
 const currentConnections = new Map<string, extensionApi.Disposable>();
 const containerProviderConnections = new Map<string, extensionApi.ContainerProviderConnection>();
 
-// Configuration buttons
-const configurationCompatibilityModeMacSetupNotificationDoNotShow = 'setting.doNotShowMacHelperNotification';
-
 // Telemetry
 let telemetryLogger: extensionApi.TelemetryLogger;
 
@@ -168,15 +165,6 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
   }
 }
 
-// Shortform for getting the do not show ever again setting for the podman-mac-helper notification
-function getDoNotShowMacHelperSetting(): boolean {
-  return (
-    extensionApi.configuration
-      .getConfiguration('podman')
-      .get<boolean>(configurationCompatibilityModeMacSetupNotificationDoNotShow) ?? false
-  );
-}
-
 export async function updateMachines(
   provider: extensionApi.Provider,
   podmanConfiguration: PodmanConfiguration,
@@ -207,7 +195,6 @@ async function doUpdateMachines(
     if (extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
       // push setup notification
       extensionNotifications.notifySetupPodman();
-      extensionNotifications.shouldNotifySetup = false;
     }
     throw error;
   }
@@ -229,7 +216,6 @@ async function doUpdateMachines(
   if (shouldCleanMachine && extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
     // push setup notification
     extensionNotifications.notifySetupPodman();
-    extensionNotifications.shouldNotifySetup = false;
   }
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
@@ -239,7 +225,6 @@ async function doUpdateMachines(
   if (extensionNotifications.shouldNotifySetup && machines.length === 0 && !extensionApi.env.isLinux) {
     // push setup notification
     extensionNotifications.notifySetupPodman();
-    extensionNotifications.shouldNotifySetup = false;
   }
 
   // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
@@ -742,7 +727,6 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
       if (extensionApi.env.isLinux && extensionNotifications.shouldNotifySetup) {
         // push setup notification
         extensionNotifications.notifySetupPodman();
-        extensionNotifications.shouldNotifySetup = false;
       }
     } else if (installedPodman.version) {
       provider.updateVersion(installedPodman.version);
@@ -1398,7 +1382,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // only available for macOS
   if (extensionApi.env.isMac) {
     // Get if we should never show the podman-mac-helper notification ever again
-    extensionNotifications.doNotShowMacHelperSetup = getDoNotShowMacHelperSetting();
+    extensionNotifications.doNotShowMacHelperSetup = extensionNotifications.getDoNotShowMacHelperSetting();
 
     // Register the command for disabling the do not show mac helper setting permanently
     extensionContext.subscriptions.push(
@@ -1407,7 +1391,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
         // is consistent / will not show the notification again
         await extensionApi.configuration
           .getConfiguration('podman')
-          .update(configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
+          .update(ExtensionNotifications.configurationCompatibilityModeMacSetupNotificationDoNotShow, true);
 
         //  Set the global variable to true
         extensionNotifications.doNotShowMacHelperSetup = true;
