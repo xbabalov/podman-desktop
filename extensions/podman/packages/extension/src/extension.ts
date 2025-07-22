@@ -190,12 +190,7 @@ async function doUpdateMachines(
     }
     extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-    // Only on macOS and Windows should we show the setup notification
-    // if for some reason doing getJSONMachineList fails..
-    if (extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
-      // push setup notification
-      extensionNotifications.notifySetupPodman();
-    }
+    extensionNotifications.notifySetupPodmanNotLinux();
     throw error;
   }
 
@@ -213,19 +208,12 @@ async function doUpdateMachines(
   }
 
   // invalid machines is not making the provider working properly so always notify
-  if (shouldCleanMachine && extensionNotifications.shouldNotifySetup && !extensionApi.env.isLinux) {
+  if (shouldCleanMachine || machines.length === 0) {
     // push setup notification
-    extensionNotifications.notifySetupPodman();
+    extensionNotifications.notifySetupPodmanNotLinux();
   }
 
   extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
-
-  // Only show the notification on macOS and Windows
-  // as Podman is already installed on Linux and machine is OPTIONAL.
-  if (extensionNotifications.shouldNotifySetup && machines.length === 0 && !extensionApi.env.isLinux) {
-    // push setup notification
-    extensionNotifications.notifySetupPodman();
-  }
 
   // if there is at least one machine whihc does not need to be cleaned and the OS is not Linux
   // podman is correctly setup so if there is an old notification asking the user to take action
@@ -396,13 +384,8 @@ async function doUpdateMachines(
   }
 
   // Only do the check if the provider is ready
-  if (extensionApi.env.isMac && provider.status === 'ready') {
-    // At the end of the entire check, let's make sure that on macOS if the socket is not a disguised Podman socket
-    // and if we should notify that we need to run podman-mac-helper, we do so.
-    await extensionNotifications.checkAndNotifySetupPodmanMacHelper();
-
-    // Check with regards to the disguised podman socket as well
-    await extensionNotifications.checkAndNotifyDisguisedPodman();
+  if (provider.status === 'ready') {
+    await extensionNotifications.checkMacSocket();
   }
 }
 
@@ -1453,13 +1436,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     // Push the results of the command so we can unload it later
     extensionContext.subscriptions.push(command);
 
-    // Only on macOS, and only do the check if the provider is actually ready.
-    if (extensionApi.env.isMac && provider.status === 'ready') {
-      // At the end, we "double check" that the socket is indeed disguised. We should only do this once on initial
-      // extension activation so that the user isn't constantly prompted with the error message.
-      await extensionNotifications.checkAndNotifyDisguisedPodman();
-      // After pushing, let's check to see if we need to run podman-mac-helper notification at all
-      await extensionNotifications.checkAndNotifySetupPodmanMacHelper();
+    // Do the check if the provider is actually ready.
+    if (provider.status === 'ready') {
+      await extensionNotifications.checkMacSocket();
     }
   }
 

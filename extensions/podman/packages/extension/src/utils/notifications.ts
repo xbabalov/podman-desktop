@@ -102,7 +102,7 @@ export class ExtensionNotifications {
 
   // Check that the socket is indeed a disguised podman socket, if it is NOT, we should
   // alert the user that compatibility was not ran.
-  public async checkAndNotifyDisguisedPodman(): Promise<void> {
+  private async checkAndNotifyDisguisedPodman(): Promise<void> {
     const socketCompatibilityMode = getSocketCompatibility();
 
     // Immediate return as we should not be checking if compatibility mode wasn't "enabled" (press Enable button).
@@ -139,7 +139,7 @@ export class ExtensionNotifications {
     });
   }
 
-  public async checkAndNotifySetupPodmanMacHelper(): Promise<void> {
+  private async checkAndNotifySetupPodmanMacHelper(): Promise<void> {
     // Exit immediately if doNotShowMacHelperSetup is true
     if (this.doNotShowMacHelperSetup) {
       return;
@@ -159,6 +159,30 @@ export class ExtensionNotifications {
     } else {
       // If it's already enabled, just dispose the notification
       this.podmanMacHelperNotificationDisposable?.dispose();
+    }
+  }
+
+  public async checkMacSocket(): Promise<void> {
+    // This check specifically applies to macOS environments.
+    if (extensionApi.env.isMac) {
+      // On macOS, verify if the Podman socket requires the podman-mac-helper.
+      // This notification should ideally occur only once upon initial extension activation
+      // to prevent repetitive user prompts.
+      await this.checkAndNotifySetupPodmanMacHelper();
+
+      // Additionally, verify if the Podman socket is a "disguised" Podman socket
+      // (e.g., a Docker-compatible socket provided by Podman) and notify the user
+      // if any specific setup or awareness is required.
+      await this.checkAndNotifyDisguisedPodman();
+    }
+  }
+
+  public notifySetupPodmanNotLinux(): void {
+    // Only show the notification on macOS and Windows
+    // as Podman is already installed on Linux and machine is OPTIONAL.
+    if (this.shouldNotifySetup && !extensionApi.env.isLinux) {
+      // push setup notification
+      this.notifySetupPodman();
     }
   }
 }
