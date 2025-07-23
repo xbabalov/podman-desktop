@@ -751,6 +751,15 @@ export async function registerProviderFor(
   machineInfo: MachineInfo,
   socketPath: string,
 ): Promise<void> {
+  const isHyperVMachine = extensionApi.env.isWindows && machineInfo.vmType === VMTYPE.HYPERV;
+  const isEditMemorySupported = extensionApi.env.isMac || isHyperVMachine;
+  const isEditCPUSupported = extensionApi.env.isMac || isHyperVMachine;
+  const isEditDiskSizeSupported = extensionApi.env.isMac;
+
+  extensionApi.context.setValue(PODMAN_MACHINE_EDIT_MEMORY, isEditMemorySupported);
+  extensionApi.context.setValue(PODMAN_MACHINE_EDIT_CPU, isEditCPUSupported);
+  extensionApi.context.setValue(PODMAN_MACHINE_EDIT_DISK_SIZE, isEditDiskSizeSupported);
+
   const lifecycle: extensionApi.ProviderConnectionLifecycle = {
     start: async (context, logger): Promise<void> => {
       await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
@@ -764,19 +773,19 @@ export async function registerProviderFor(
       });
     },
   };
-  //support edit only on MacOS as Podman WSL is nop and generates errors
-  if (extensionApi.env.isMac) {
+  //support edit only on MacOS and HyperV machines as Podman WSL is nop and generates errors
+  if (isEditMemorySupported || isEditCPUSupported || isEditDiskSizeSupported) {
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
       for (const key of Object.keys(params)) {
-        if (key === 'podman.machine.cpus') {
+        if (isEditCPUSupported && key === 'podman.machine.cpus') {
           args.push('--cpus', params[key]);
           effective = true;
-        } else if (key === 'podman.machine.memory') {
+        } else if (isEditMemorySupported && key === 'podman.machine.memory') {
           args.push('--memory', Math.floor(params[key] / (1024 * 1024)).toString());
           effective = true;
-        } else if (key === 'podman.machine.diskSize') {
+        } else if (isEditDiskSizeSupported && key === 'podman.machine.diskSize') {
           args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
           effective = true;
         }
@@ -1033,6 +1042,9 @@ export const PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY = 'podman.isLibkrunSupported'
 export const CREATE_WSL_MACHINE_OPTION_SELECTED_KEY = 'podman.isCreateWSLOptionSelected';
 export const WSL_HYPERV_ENABLED_KEY = 'podman.wslHypervEnabled';
 export const PODMAN_DOCKER_COMPAT_ENABLE_KEY = 'podman.podmanDockerCompatibilityEnabled';
+export const PODMAN_MACHINE_EDIT_CPU = 'podman.podmanMachineEditCPUSupported';
+export const PODMAN_MACHINE_EDIT_MEMORY = 'podman.podmanMachineEditMemorySupported';
+export const PODMAN_MACHINE_EDIT_DISK_SIZE = 'podman.podmanMachineEditDiskSizeSupported';
 
 export function initTelemetryLogger(): void {
   telemetryLogger = extensionApi.env.createTelemetryLogger();

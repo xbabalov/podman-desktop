@@ -1549,6 +1549,9 @@ test('provider is registered with edit capabilities on MacOS', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeDefined();
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, true);
 });
 
 test('display name is beautified version of the name', async () => {
@@ -1576,7 +1579,7 @@ test('display name is beautified version of the name', async () => {
   expect(registeredConnection?.name).toBe(machineDefaultName);
 });
 
-test('provider is registered without edit capabilities on Windows', async () => {
+test('provider is registered without edit capabilities on (non-HyperV) Windows', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
@@ -1592,6 +1595,36 @@ test('provider is registered without edit capabilities on Windows', async () => 
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
+});
+
+test('provider is registered with limited capabilities on (HyperV) Windows', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
+  spyExecPromise.mockImplementation(() => {
+    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
+  });
+  let registeredConnection: ContainerProviderConnection | undefined;
+  vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
+    registeredConnection = connection;
+    return Disposable.from({ dispose: () => {} });
+  });
+
+  await extension.registerProviderFor(
+    provider,
+    podmanConfiguration,
+    { ...machineInfo, vmType: VMTYPE.HYPERV },
+    'socket',
+  );
+  expect(registeredConnection).toBeDefined();
+  expect(registeredConnection?.lifecycle).toBeDefined();
+  expect(registeredConnection?.lifecycle?.edit).toBeDefined();
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, true);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
 });
 
 test('provider is registered without edit capabilities on Linux', async () => {
@@ -1610,6 +1643,9 @@ test('provider is registered without edit capabilities on Linux', async () => {
   expect(registeredConnection).toBeDefined();
   expect(registeredConnection?.lifecycle).toBeDefined();
   expect(registeredConnection?.lifecycle?.edit).toBeUndefined();
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_CPU, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_MEMORY, false);
+  expect(extensionApi.context.setValue).toBeCalledWith(extension.PODMAN_MACHINE_EDIT_DISK_SIZE, false);
 });
 
 test('Even with getJSONMachineList erroring, do not show setup notification on Linux', async () => {
