@@ -219,8 +219,7 @@ async function doUpdateMachines(
   // podman is correctly setup so if there is an old notification asking the user to take action
   // we dispose it as not needed anymore
   if (!shouldCleanMachine && machines.length > 0 && !extensionApi.env.isLinux) {
-    extensionNotifications.notificationDisposable?.dispose();
-    extensionNotifications.shouldNotifySetup = true;
+    extensionNotifications.disposeNotification();
   }
 
   // update status of existing machines
@@ -710,7 +709,7 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
       // if podman is not installed and the OS is linux we show the podman onboarding notification (if it has not been shown earlier)
       // this should be limited to Linux as in other OSes the onboarding workflow is enabled based on the podman machine existance
       // and the notification is handled by checking the machine
-      if (extensionApi.env.isLinux && extensionNotifications.shouldNotifySetup) {
+      if (extensionApi.env.isLinux) {
         // push setup notification
         extensionNotifications.notifySetupPodman();
       }
@@ -724,9 +723,8 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
       extensionApi.context.setValue('podmanIsNotInstalled', false, 'onboarding');
       // if podman has been installed, we reset the notification flag so if podman is uninstalled in future we can show the notification again
       if (extensionApi.env.isLinux) {
-        extensionNotifications.shouldNotifySetup = true;
         // notification is no more required
-        extensionNotifications.notificationDisposable?.dispose();
+        extensionNotifications.disposeNotification();
       }
     }
   } catch (error) {
@@ -1256,9 +1254,7 @@ export function registerOnboardingRemoveUnsupportedMachinesCommand(): extensionA
         }
       }
 
-      extensionNotifications.shouldNotifySetup = true;
-      // notification is no more required
-      extensionNotifications.notificationDisposable?.dispose();
+      extensionNotifications.disposeNotification();
     }
 
     if (errors.length > 0) {
@@ -2258,9 +2254,7 @@ export async function createMachine(
     sendTelemetryRecords('podman.machine.init', telemetryRecords, false);
   }
   extensionApi.context.setValue('podmanMachineExists', true, 'onboarding');
-  extensionNotifications.shouldNotifySetup = true;
-  // notification is no more required
-  extensionNotifications.notificationDisposable?.dispose();
+  extensionNotifications.disposeNotification();
 }
 
 export function resetShouldNotifySetup(): void {

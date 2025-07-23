@@ -38,10 +38,6 @@ export class ExtensionNotifications {
 
   private _notificationDisposable?: extensionApi.Disposable;
 
-  public get notificationDisposable(): extensionApi.Disposable | undefined {
-    return this._notificationDisposable;
-  }
-
   private _disguisedPodmanNotificationDisposable?: extensionApi.Disposable;
 
   public get disguisedPodmanNotificationDisposable(): extensionApi.Disposable | undefined {
@@ -75,16 +71,18 @@ export class ExtensionNotifications {
   // to avoid having multiple notification of the same nature in the notifications list
   // we first dispose the old one and then push the same again
   public notifySetupPodman(): void {
-    // Alert for setting up
-    this._notificationDisposable ??= extensionApi.window.showNotification({
-      title: 'Podman needs to be set up',
-      body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
-      type: 'info',
-      markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
-      highlight: true,
-      silent: true,
-    });
-    this.shouldNotifySetup = false;
+    if (this.shouldNotifySetup) {
+      // Alert for setting up
+      this._notificationDisposable ??= extensionApi.window.showNotification({
+        title: 'Podman needs to be set up',
+        body: 'The Podman extension is installed, yet requires configuration. Some features might not function optimally.',
+        type: 'info',
+        markdownActions: ':button[Set up]{href=/preferences/onboarding/podman-desktop.podman title="Set up Podman"}',
+        highlight: true,
+        silent: true,
+      });
+      this.shouldNotifySetup = false;
+    }
   }
 
   private notifyDisguisedPodmanSocket(): void {
@@ -180,9 +178,15 @@ export class ExtensionNotifications {
   public notifySetupPodmanNotLinux(): void {
     // Only show the notification on macOS and Windows
     // as Podman is already installed on Linux and machine is OPTIONAL.
-    if (this.shouldNotifySetup && !extensionApi.env.isLinux) {
+    if (!extensionApi.env.isLinux) {
       // push setup notification
       this.notifySetupPodman();
     }
+  }
+
+  public disposeNotification(): void {
+    // notification is no more required
+    this._notificationDisposable?.dispose();
+    this.shouldNotifySetup = true;
   }
 }
